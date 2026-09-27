@@ -37,7 +37,14 @@ const PROJECTS: Project[] = [
     body: 'a paste platform for sharing text and images.',
     tech: 'php, html, mysql',
   },
-  
+  {
+    title: 'astral.rest',
+    meta: '2026 - 2026 • portfolio',
+    href: 'https://astral.rest',
+    body: 'a portfolio website for showcasing my own work.',
+    tech: 'react js, node.js, javascript',
+  },
+
 ]
 
 export default function Work() {

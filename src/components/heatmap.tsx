@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 
 const GITHUB_USER = 'plwhed'
 const API_URL = `https://github-contributions-api.jogruber.de/v4/${GITHUB_USER}`
@@ -56,8 +57,20 @@ function buildGrid(contributions: Contribution[]) {
   return { weeks, total }
 }
 
+function labelFor(cell: Cell) {
+  const [year, month, day] = cell.date.split('-').map(Number)
+  const formatted = new Date(year, month - 1, day).toLocaleDateString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+  return `${cell.count} contribution${cell.count === 1 ? '' : 's'} · ${formatted}`
+}
+
 export default function Heatmap() {
   const [contributions, setContributions] = useState<Contribution[]>([])
+  const [hovered, setHovered] = useState<{ cell: Cell; x: number; y: number } | null>(null)
 
   useEffect(() => {
     let active = true
@@ -98,8 +111,13 @@ export default function Heatmap() {
               {days.map((cell) => (
                 <span
                   key={cell.date}
-                  title={`${cell.count} contribution${cell.count === 1 ? '' : 's'} on ${cell.date}`}
-                  className={`h-2.5 w-2.5 rounded-[2px] ${SCALE[cell.level] ?? SCALE[0]}`}
+                  onMouseEnter={(event) =>
+                    setHovered({ cell, x: event.clientX, y: event.clientY })
+                  }
+                  onMouseLeave={() => setHovered(null)}
+                  className={`h-2.5 w-2.5 rounded-[2px] transition-transform duration-100 hover:scale-150 ${
+                    SCALE[cell.level] ?? SCALE[0]
+                  }`}
                 />
               ))}
             </div>
@@ -107,6 +125,17 @@ export default function Heatmap() {
         </div>
       </div>
 
+      {hovered
+        ? createPortal(
+            <span
+              className="pointer-events-none fixed z-[100] -translate-x-1/2 -translate-y-full whitespace-nowrap rounded border border-neutral-200 bg-white px-2 py-1.5 text-[11px] leading-none text-neutral-600 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-300"
+              style={{ left: hovered.x, top: hovered.y - 10 }}
+            >
+              {labelFor(hovered.cell)}
+            </span>,
+            document.body,
+          )
+        : null}
     </div>
   )
 }
