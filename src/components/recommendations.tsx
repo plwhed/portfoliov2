@@ -14,6 +14,12 @@ const ENTRIES: Entry[] = [
     meta: 'collaboration • developer',
     body: 'lethal.wtf is a bio-link platform for creators to showcase their content and connect with their audience. i work on the backend and infrastructure that powers the platform, ensuring it is reliable and scalable.',
   },
+  {
+    title: 'fearswap',
+    href: 'https://fearswap.com',
+    meta: 'friend',
+    body: 'fearswap is a decentralized exchange (dex) for swapping tokens on the ethereum blockchain. i have known the founder for years and we have collaborated on various projects together.',
+  }
 ]
 
 export default function Recommendations() {
