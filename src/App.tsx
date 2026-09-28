@@ -2,6 +2,8 @@ import { useState } from 'react'
 import DemoBackground from '@/components/ui/demo'
 import { Component as SpotlightCursor } from '@/components/ui/spotlight-cursor'
 import ThemeToggle from '@/components/theme-toggle'
+import LikeButton from '@/components/like-button'
+import VisitorCounter from '@/components/visitor-counter'
 import Presence from '@/components/presence'
 import Info from '@/components/info'
 import Work from '@/components/work'
@@ -23,6 +25,7 @@ export default function App() {
             mario
           </span>
           <ThemeToggle />
+          <LikeButton />
         </div>
         <Presence />
         <nav className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] leading-none">
@@ -57,7 +60,7 @@ export default function App() {
       </header>
 
       <SpotlightCursor />
-
+      <VisitorCounter />
     </div>
   )
 }
