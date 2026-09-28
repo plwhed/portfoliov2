@@ -13,25 +13,61 @@ export default function VisitorCounter() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let cancelled = false
     const today = getTodayString()
-    const lastVisitDate = window.localStorage.getItem(VISIT_DATE_KEY)
-    const storedCount = parseInt(window.localStorage.getItem(VISIT_COUNT_KEY) || '0', 10)
-    const hasVisitedToday = window.localStorage.getItem(VISIT_KEY) === 'true'
+    const fallbackCount = parseInt(window.localStorage.getItem(VISIT_COUNT_KEY) || '0', 10)
 
-    if (lastVisitDate !== today) {
+    if (window.localStorage.getItem(VISIT_DATE_KEY) !== today) {
       window.localStorage.setItem(VISIT_DATE_KEY, today)
       window.localStorage.setItem(VISIT_KEY, 'false')
     }
+    const alreadyCounted = window.localStorage.getItem(VISIT_KEY) === 'true'
 
-    if (!hasVisitedToday) {
-      const newCount = storedCount + 1
-      window.localStorage.setItem(VISIT_COUNT_KEY, newCount.toString())
-      window.localStorage.setItem(VISIT_KEY, 'true')
-      setCount(newCount)
-    } else {
-      setCount(storedCount)
+    async function load() {
+      try {
+        if (!alreadyCounted) {
+          const r = await fetch('/api/visits', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ date: today }),
+          })
+          if (!r.ok) throw new Error(`visits POST ${r.status}`)
+          const data = await r.json()
+          if (!cancelled && typeof data.count === 'number') {
+            setCount(data.count)
+            window.localStorage.setItem(VISIT_COUNT_KEY, String(data.count))
+          }
+          window.localStorage.setItem(VISIT_KEY, 'true')
+        } else {
+          const r = await fetch(`/api/visits?date=${today}`, { cache: 'no-store' })
+          if (!r.ok) throw new Error(`visits GET ${r.status}`)
+          const data = await r.json()
+          if (!cancelled && typeof data.count === 'number') {
+            setCount(data.count)
+            window.localStorage.setItem(VISIT_COUNT_KEY, String(data.count))
+          }
+        }
+      } catch {
+        // Offline or API not available: fall back to the local once-per-day count.
+        if (!cancelled) {
+          if (!alreadyCounted) {
+            const newCount = fallbackCount + 1
+            window.localStorage.setItem(VISIT_COUNT_KEY, String(newCount))
+            window.localStorage.setItem(VISIT_KEY, 'true')
+            setCount(newCount)
+          } else {
+            setCount(fallbackCount)
+          }
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
     }
-    setLoading(false)
+
+    load()
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   if (loading) return null
